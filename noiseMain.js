@@ -27,6 +27,11 @@ async function main() {
       console.error(e);
     }
   }
+async function fetchActiveRunway() {
+  const res = await fetch("/api/airport/crl/active-runway");
+  const json = await res.json();
+  return json.runway; // "06" ou "24"
+}
 
   // Piste active / corridor
   try {
@@ -42,3 +47,4 @@ async function main() {
 }
 
 main();
+let activeRunway = await fetchActiveRunway();
