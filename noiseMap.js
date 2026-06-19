@@ -2,6 +2,10 @@
 import "https://unpkg.com/leaflet/dist/leaflet.js";
 import "https://unpkg.com/leaflet.heat/dist/leaflet-heat.js";
 import { getNoiseColor } from "./noiseConfig.js";
+import { getSonoColorByRunway } from "./sonoColors.js";
+
+const color = getSonoColorByRunway(s.id, activeRunway);
+marker.setIcon(createIcon(color));
 
 export function initNoiseMap(divId, sonometers, options = {}) {
   const map = L.map(divId, {
