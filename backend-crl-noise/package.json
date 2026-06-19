@@ -1,0 +1,16 @@
+{
+  "type": "module",
+  "name": "crl-noise-backend",
+  "version": "1.0.0",
+  "main": "server.mjs",
+  "scripts": {
+    "start": "node server.mjs",
+    "dev": "NODE_ENV=development node server.mjs"
+  },
+  "dependencies": {
+    "express": "^4.19.0",
+    "cors": "^2.8.5",
+    "morgan": "^1.10.0",
+    "node-fetch": "^3.3.2"
+  }
+}
