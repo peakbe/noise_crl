@@ -43,6 +43,25 @@ export function initNoiseMap(divId, sonometers, options = {}) {
     blur: 25,
     maxZoom: 17
   }).addTo(map);
+  
+export function getSonoColorByRunway(id, runway) {
+  id = id.toUpperCase();
+
+  // --- PISTE 24 ---
+  if (runway === "24") {
+    return RUNWAY_24_GREEN.includes(id) ? "green" : "grey";
+  }
+
+  // --- PISTE 06 ---
+  if (runway === "06") {
+    if (RUNWAY_06_GREEN.includes(id)) return "green";
+    if (RUNWAY_06_RED.includes(id)) return "red";
+    return "grey";
+  }
+
+  // Si piste inconnue
+  return "grey";
+}
 
   function updateNoiseDisplay(noiseData) {
     // noiseData: [{id, LAeq, Lmax, timestamp}, ...]
