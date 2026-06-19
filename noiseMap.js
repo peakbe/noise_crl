@@ -63,9 +63,12 @@ export function getSonoColorByRunway(id, runway) {
   return "grey";
 }
 
-  function updateNoiseDisplay(noiseData) {
+  updateNoiseDisplay(noiseData, activeRunway)
+ {
     // noiseData: [{id, LAeq, Lmax, timestamp}, ...]
     const heatPoints = [];
+const color = getSonoColorByRunway(s.id, activeRunway);
+marker.setIcon(createIcon(color));
 
     noiseData.forEach(n => {
       const s = sonometers.find(x => x.id === n.id);
@@ -82,6 +85,7 @@ export function getSonoColorByRunway(id, runway) {
           `<small>${new Date(n.timestamp).toLocaleString()}</small>`
         );
       }
+updateRunwayLabel(activeRunway);
 
       // Normalisation heatmap (0–1)
       const intensity = Math.min(1, Math.max(0, (n.LAeq - 45) / 35));
@@ -111,6 +115,25 @@ export function getSonoColorByRunway(id, runway) {
         center.lon + dxNm * nmToDegLon
       ];
     }
+function updateRunwayLabel(runway) {
+  if (!runwayLabel) {
+    runwayLabel = L.control({ position: "topright" });
+    runwayLabel.onAdd = () => {
+      const div = L.DomUtil.create("div", "runway-label");
+      div.style.padding = "6px 10px";
+      div.style.background = "#02101caa";
+      div.style.border = "1px solid #0af";
+      div.style.color = "#7fd0ff";
+      div.style.fontWeight = "600";
+      div.style.borderRadius = "4px";
+      div.innerHTML = `Piste active : RWY ${runway}`;
+      return div;
+    };
+    runwayLabel.addTo(map);
+  } else {
+    runwayLabel.getContainer().innerHTML = `Piste active : RWY ${runway}`;
+  }
+}
 
     // Axe piste
     const dx = Math.sin(rad) * halfLen;
