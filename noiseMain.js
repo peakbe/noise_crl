@@ -11,7 +11,8 @@ async function main() {
   async function refreshNoise() {
     try {
       const noiseData = await fetchCurrentNoise();
-      mapCtrl.updateNoiseDisplay(noiseData);
+      mapCtrl.updateNoiseDisplay(noiseData, activeRunway);
+
       panel.renderSummary(noiseData);
       panel.renderList(CRL_SONOMETERS, noiseData, async (id) => {
         const s = CRL_SONOMETERS.find(x => x.id === id);
@@ -27,6 +28,7 @@ async function main() {
       console.error(e);
     }
   }
+  
 async function fetchActiveRunway() {
   const res = await fetch("/api/airport/crl/active-runway");
   const json = await res.json();
@@ -48,3 +50,14 @@ async function fetchActiveRunway() {
 
 main();
 let activeRunway = await fetchActiveRunway();
+async function refreshRunway() {
+  try {
+    activeRunway = await fetchActiveRunway();
+    console.log("Piste active:", activeRunway);
+  } catch (e) {
+    console.warn("Impossible de récupérer la piste active", e);
+  }
+}
+
+setInterval(refreshRunway, 60_000); // toutes les 60 sec
+
