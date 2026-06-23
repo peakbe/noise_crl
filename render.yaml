@@ -14,7 +14,8 @@ services:
     envVars:
       NODE_VERSION: 20
 
-      CHECKWX_KEY: {{ CHECKWX_KEY }}
-      OPENWEATHER_KEY: {{ OPENWEATHER_KEY }}
-      AIRLABS_KEY: {{ AIRLABS_KEY }}
-      NOISE_API_BASE: {{ NOISE_API_BASE }}
+      CHECKWX_KEY: ""
+      OPENWEATHER_KEY: ""
+      AIRLABS_KEY: ""
+      NOISE_API_BASE: ""
+
