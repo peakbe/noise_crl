@@ -1,12 +1,21 @@
 // services/noiseService.mjs
 import { cache } from "../cache.mjs";
 import { simulateNoiseCurrent, simulateNoiseHistory } from "./simNoise.mjs";
+import { getActiveRunway } from "./runwayService.mjs";
 
 export async function getNoiseCurrent() {
   return cache.wrap("noise_current", 10_000, async () => {
-    // plus de fetch externe : simulateur uniquement
-    // tu pourras plus tard lui passer la vraie piste active
-    return simulateNoiseCurrent("24");
+    // 1) On récupère la vraie piste active
+    let active = "24";
+    try {
+      const rwy = await getActiveRunway();
+      if (rwy?.runway) active = rwy.runway;
+    } catch {
+      // fallback silencieux
+    }
+
+    // 2) On simule le bruit en fonction de la piste active
+    return simulateNoiseCurrent(active);
   });
 }
 
