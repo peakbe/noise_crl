@@ -5,7 +5,7 @@ import "https://unpkg.com/leaflet/dist/leaflet.js";
 import "https://unpkg.com/leaflet.heat/dist/leaflet-heat.js";
 
 import { SONO_COLORS, getSonoColorByRunway } from "./sonoColors.js";
-import { CRL_SONOMETERS } from "./crlSonometers.mjs";
+import { CRL_SONOMETERS } from "./crlSonometers.js";
 
 // -----------------------------------------------------------------------------
 // INIT CARTE
