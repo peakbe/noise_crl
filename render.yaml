@@ -12,10 +12,13 @@ services:
     autoDeploy: true
 
     envVars:
-      NODE_VERSION: 20
-
-      CHECKWX_KEY: ""
-      OPENWEATHER_KEY: ""
-      AIRLABS_KEY: ""
-      NOISE_API_BASE: ""
-
+      - key: NODE_VERSION
+        value: "20"
+      - key: CHECKWX_KEY
+        value: ""
+      - key: OPENWEATHER_KEY
+        value: ""
+      - key: AIRLABS_KEY
+        value: ""
+      - key: NOISE_API_BASE
+        value: ""
