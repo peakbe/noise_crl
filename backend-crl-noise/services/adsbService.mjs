@@ -28,3 +28,15 @@ export async function getAdsbLive() {
     }
   });
 }
+
+export async function getAdsbStatus() {
+  try {
+    const traffic = await getAdsbLive();
+    return {
+      ok: true,
+      aircraft: traffic.ac.length
+    };
+  } catch {
+    return { ok: false };
+  }
+}
