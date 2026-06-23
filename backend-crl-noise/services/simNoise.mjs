@@ -12,9 +12,11 @@ export function simulateNoiseCurrent(activeRunway = "24") {
   const now = new Date().toISOString();
 
   return CRL_SONOMETERS.map(s => {
-    const rand = Math.random();
-    const delta = (rand - 0.5) * 12; // ±6 dB
-    const LAeq = base + delta;
+    const latDist = lateralDistanceToCorridor(s.lat, s.lon, activeRunway);
+    const boost = corridorBoost(latDist);
+
+    const rand = (Math.random() - 0.5) * 6; // ±3 dB
+    const LAeq = base + boost + rand;
     const Lmax = LAeq + 8 + (Math.random() * 4);
 
     const offline = Math.random() < 0.05;
@@ -24,10 +26,15 @@ export function simulateNoiseCurrent(activeRunway = "24") {
       LAeq: offline ? null : Number(LAeq.toFixed(1)),
       Lmax: offline ? null : Number(Lmax.toFixed(1)),
       timestamp: now,
-      status: offline ? "offline" : "ok"
+      status: offline ? "offline" : "ok",
+      corridor: {
+        latDist: Math.round(latDist),
+        boost
+      }
     };
   });
 }
+
 
 export function simulateNoiseHistory(id, from, to) {
   const start = from ? new Date(from) : new Date(Date.now() - 3600_000);
