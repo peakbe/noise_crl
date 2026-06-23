@@ -121,3 +121,14 @@ export function initNoisePanel(containerId) {
     renderDetails
   };
 }
+panel.renderMonitoring = function (mon) {
+  const div = document.getElementById("np-monitoring");
+  div.innerHTML = `
+    <div class="monitor-card">
+      <div class="row"><span>METAR</span><span class="${mon.services.metar.ok ? "ok" : "err"}">${mon.services.metar.ok ? "OK" : "ERR"}</span></div>
+      <div class="row"><span>Runway</span><span class="${mon.services.runway.ok ? "ok" : "err"}">${mon.services.runway.runway}</span></div>
+      <div class="row"><span>Bruit</span><span class="${mon.services.noise.ok ? "ok" : "err"}">${mon.services.noise.sensors} sensors</span></div>
+      <div class="row"><span>ADS-B</span><span class="${mon.services.adsb.ok ? "ok" : "err"}">${mon.services.adsb.aircraft} ac</span></div>
+    </div>
+  `;
+};
