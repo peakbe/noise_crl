@@ -20,3 +20,19 @@ export async function getNoiseHistory(id, from, to) {
     return res.json();
   });
 }
+
+export async function getNoiseStatus() {
+  try {
+    const data = await getNoiseCurrent();
+    const count = data.length;
+    const offline = data.filter(s => s.status === "offline").length;
+
+    return {
+      ok: offline === 0,
+      sensors: count,
+      offline
+    };
+  } catch {
+    return { ok: false };
+  }
+}
