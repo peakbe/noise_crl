@@ -3,6 +3,10 @@ import { getNoiseCurrent, getNoiseHistory } from "./services/noiseService.mjs";
 import { getActiveRunway } from "./services/runwayService.mjs";
 import { getAdsbLive } from "./services/adsbService.mjs";
 import { getWeatherCRL } from "./services/weatherService.mjs";
+import { getMetarStatus } from "./services/metarService.mjs";
+import { getRunwayStatus } from "./services/runwayService.mjs";
+import { getNoiseStatus } from "./services/noiseService.mjs";
+import { getAdsbStatus } from "./services/adsbService.mjs";
 
 export const router = express.Router();
 
@@ -36,4 +40,25 @@ router.get("/weather/current", async (req, res, next) => {
   try {
     res.json(await getWeatherCRL());
   } catch (e) { next(e); }
+});
+
+router.get("/monitoring", async (req, res) => {
+  try {
+    const metar = await getMetarStatus();
+    const runway = await getRunwayStatus();
+    const noise = await getNoiseStatus();
+    const adsb = await getAdsbStatus();
+
+    res.json({
+      status: "ok",
+      timestamp: new Date().toISOString(),
+      services: { metar, runway, noise, adsb }
+    });
+  } catch (e) {
+    res.status(500).json({
+      status: "error",
+      error: e.message,
+      timestamp: new Date().toISOString()
+    });
+  }
 });
