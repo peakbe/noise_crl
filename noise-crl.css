@@ -195,3 +195,19 @@ body {
 .noise-marker {
   filter: drop-shadow(0 0 4px #000);
 }
+.monitor-card {
+  border: 1px solid #0af;
+  padding: 10px;
+  background: #020f20;
+  border-radius: 6px;
+  margin-top: 10px;
+}
+
+.monitor-card .row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+}
+
+.ok { color: #00ff88; }
+.err { color: #ff4040; }
