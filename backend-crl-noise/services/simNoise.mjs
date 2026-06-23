@@ -29,6 +29,19 @@ function deg2rad(d) {
 function lateralDistanceToCorridor(lat, lon, runway) {
   const heading = RWY_HEADING[runway] ?? 240;
   const h = deg2rad(heading);
+  
+function longitudinalDistanceToThreshold(lat, lon, runway) {
+  const heading = RWY_HEADING[runway] ?? 240;
+  const h = deg2rad(heading);
+
+  function longitudinalBoost(longDist) {
+  const d = Math.abs(longDist);
+
+  if (d < 500) return 6;       // proche du seuil → très bruyant
+  if (d < 1500) return 3;      // zone d’approche → modéré
+  if (d < 3000) return 1;      // loin → faible
+  return -2;                   // très loin → bruit minimal
+}
 
   // vecteur piste
   const vx = Math.cos(h);
@@ -74,11 +87,17 @@ export function simulateNoiseCurrent(activeRunway = "24") {
   const now = new Date().toISOString();
 
   return CRL_SONOMETERS.map(s => {
+    // distance latérale
     const latDist = lateralDistanceToCorridor(s.lat, s.lon, activeRunway);
-    const boost = corridorBoost(latDist);
+    const boostLat = corridorBoost(latDist);
 
+    // distance longitudinale
+    const longDist = longitudinalDistanceToThreshold(s.lat, s.lon, activeRunway);
+    const boostLong = longitudinalBoost(longDist);
+
+    // bruit final
     const rand = (Math.random() - 0.5) * 6; // ±3 dB
-    const LAeq = base + boost + rand;
+    const LAeq = base + boostLat + boostLong + rand;
     const Lmax = LAeq + 8 + (Math.random() * 4);
 
     const offline = Math.random() < 0.05;
@@ -91,11 +110,14 @@ export function simulateNoiseCurrent(activeRunway = "24") {
       status: offline ? "offline" : "ok",
       corridor: {
         latDist: Math.round(latDist),
-        boost
+        longDist: Math.round(longDist),
+        boostLat,
+        boostLong
       }
     };
   });
 }
+
 
 // -------------------------------------------------------------
 // 6) Simulateur historique bruit (pour les détails sonomètre)
