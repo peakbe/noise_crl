@@ -1,8 +1,11 @@
-// noisePanel.js
+// noisePanel.js — Version PRO+++
+// Panneau latéral : résumé, liste, détails, dashboard IFR
+
 import { getNoiseClass, getNoiseColor } from "./noiseConfig.js";
 
 export function initNoisePanel(containerId) {
   const el = document.getElementById(containerId);
+
   el.innerHTML = `
     <div class="panel-header">
       <span class="title">CRL – BRUIT</span>
@@ -12,14 +15,46 @@ export function initNoisePanel(containerId) {
       <div id="np-summary"></div>
       <div id="np-list"></div>
       <div id="np-details"></div>
+
+      <div id="np-dashboard" class="panel-dashboard">
+        <div class="dash-row">
+          <div class="dash-card">
+            <div class="dash-title">METAR</div>
+            <div class="dash-main" id="dash-metar-main">--</div>
+            <div class="dash-sub" id="dash-metar-sub">--</div>
+          </div>
+          <div class="dash-card">
+            <div class="dash-title">RWY</div>
+            <div class="dash-main" id="dash-rwy-main">--</div>
+            <div class="dash-sub" id="dash-rwy-sub">--</div>
+          </div>
+        </div>
+
+        <div class="dash-row">
+          <div class="dash-card">
+            <div class="dash-title">BRUIT</div>
+            <div class="dash-main" id="dash-noise-main">--</div>
+            <div class="dash-sub" id="dash-noise-sub">--</div>
+          </div>
+          <div class="dash-card">
+            <div class="dash-title">ADS-B</div>
+            <div class="dash-main" id="dash-adsb-main">--</div>
+            <div class="dash-sub" id="dash-adsb-sub">--</div>
+          </div>
+        </div>
+      </div>
     </div>
   `;
 
+  // ---------------------------------------------------------------------------
+  // SUMMARY
+  // ---------------------------------------------------------------------------
   function renderSummary(noiseData) {
     if (!noiseData || noiseData.length === 0) {
       document.getElementById("np-summary").innerHTML = "<em>Aucune donnée</em>";
       return;
     }
+
     const laeqValues = noiseData.map(n => n.LAeq).filter(v => v != null);
     const avg = laeqValues.reduce((a, b) => a + b, 0) / laeqValues.length;
     const max = Math.max(...laeqValues);
@@ -39,13 +74,18 @@ export function initNoisePanel(containerId) {
     `;
   }
 
+  // ---------------------------------------------------------------------------
+  // LISTE DES SONOMÈTRES
+  // ---------------------------------------------------------------------------
   function renderList(sonometers, noiseData, onSelect) {
     const byId = new Map(noiseData.map(n => [n.id, n]));
+
     const rows = sonometers.map(s => {
       const n = byId.get(s.id);
       const laeq = n?.LAeq ?? null;
       const color = getNoiseColor(laeq);
       const cls = getNoiseClass(laeq);
+
       return `
         <div class="np-row" data-id="${s.id}">
           <span class="np-id">${s.id}</span>
@@ -69,12 +109,17 @@ export function initNoisePanel(containerId) {
     });
   }
 
+  // ---------------------------------------------------------------------------
+  // DETAILS
+  // ---------------------------------------------------------------------------
   function renderDetails(sonometer, history) {
     const elDet = document.getElementById("np-details");
+
     if (!sonometer) {
       elDet.innerHTML = "<em>Sélectionne un sonomètre</em>";
       return;
     }
+
     const last = history?.[history.length - 1];
     const color = getNoiseColor(last?.LAeq);
 
@@ -108,33 +153,13 @@ export function initNoisePanel(containerId) {
             </span>
           </div>
         </div>
-        <div class="details-chart-placeholder">
-          <em>Graphique LAeq/Lmax (à brancher sur lib de chart)</em>
-        </div>
       </div>
     `;
   }
 
-  return {
-    renderSummary,
-    renderList,
-    renderDetails
-  };
-}
-panel.renderMonitoring = function (mon) {
-  const div = document.getElementById("np-monitoring");
-  div.innerHTML = `
-    <div class="monitor-card">
-      <div class="row"><span>METAR</span><span class="${mon.services.metar.ok ? "ok" : "err"}">${mon.services.metar.ok ? "OK" : "ERR"}</span></div>
-      <div class="row"><span>Runway</span><span class="${mon.services.runway.ok ? "ok" : "err"}">${mon.services.runway.runway}</span></div>
-      <div class="row"><span>Bruit</span><span class="${mon.services.noise.ok ? "ok" : "err"}">${mon.services.noise.sensors} sensors</span></div>
-      <div class="row"><span>ADS-B</span><span class="${mon.services.adsb.ok ? "ok" : "err"}">${mon.services.adsb.aircraft} ac</span></div>
-    </div>
-  `;
-};
-export function initNoisePanel(rootId) {
-  const root = document.getElementById(rootId);
-
+  // ---------------------------------------------------------------------------
+  // DASHBOARD IFR
+  // ---------------------------------------------------------------------------
   function setText(id, text, cls) {
     const el = document.getElementById(id);
     if (!el) return;
@@ -143,37 +168,39 @@ export function initNoisePanel(rootId) {
     if (cls) el.classList.add(cls);
   }
 
-  return {
-    renderSummary() {}, // déjà existant chez toi
-    renderList() {},    // idem
+  function renderDashboard(monitoring, metarRaw) {
+    const m = monitoring?.services;
 
-    renderDashboard(monitoring, metarRaw) {
-      const m = monitoring?.services;
-
-      // METAR
-      if (m?.metar) {
-        setText("dash-metar-main", m.metar.ok ? "OK" : "ERR", m.metar.ok ? "dash-ok" : "dash-err");
-        setText("dash-metar-sub", metarRaw || m.metar.last || "--");
-      }
-
-      // RWY
-      if (m?.runway) {
-        setText("dash-rwy-main", m.runway.runway || "--", m.runway.ok ? "dash-ok" : "dash-err");
-        setText("dash-rwy-sub", m.runway.heading ? `${m.runway.heading}°` : "--");
-      }
-
-      // BRUIT
-      if (m?.noise) {
-        const cls = m.noise.offline === 0 ? "dash-ok" : "dash-warn";
-        setText("dash-noise-main", `${m.noise.sensors ?? 0}`, cls);
-        setText("dash-noise-sub", `${m.noise.offline ?? 0} offline`);
-      }
-
-      // ADS-B
-      if (m?.adsb) {
-        setText("dash-adsb-main", `${m.adsb.aircraft ?? 0}`, m.adsb.ok ? "dash-ok" : "dash-err");
-        setText("dash-adsb-sub", m.adsb.ok ? "trafic reçu" : "erreur");
-      }
+    // METAR
+    if (m?.metar) {
+      setText("dash-metar-main", m.metar.ok ? "OK" : "ERR", m.metar.ok ? "dash-ok" : "dash-err");
+      setText("dash-metar-sub", metarRaw || m.metar.last || "--");
     }
+
+    // RWY
+    if (m?.runway) {
+      setText("dash-rwy-main", m.runway.runway || "--", m.runway.ok ? "dash-ok" : "dash-err");
+      setText("dash-rwy-sub", m.runway.heading ? `${m.runway.heading}°` : "--");
+    }
+
+    // BRUIT
+    if (m?.noise) {
+      const cls = m.noise.offline === 0 ? "dash-ok" : "dash-warn";
+      setText("dash-noise-main", `${m.noise.sensors ?? 0}`, cls);
+      setText("dash-noise-sub", `${m.noise.offline ?? 0} offline`);
+    }
+
+    // ADS-B
+    if (m?.adsb) {
+      setText("dash-adsb-main", `${m.adsb.aircraft ?? 0}`, m.adsb.ok ? "dash-ok" : "dash-err");
+      setText("dash-adsb-sub", m.adsb.ok ? "trafic reçu" : "erreur");
+    }
+  }
+
+  return {
+    renderSummary,
+    renderList,
+    renderDetails,
+    renderDashboard
   };
 }
