@@ -1,6 +1,6 @@
 // noiseMain.js — bootstrap PRO+++ CRL bruit + METAR + piste active
 
-import { CRL_SONOMETERS } from "./crlSonometers.mjs";
+import { CRL_SONOMETERS } from "./crlSonometers.js";
 import { initNoiseMap } from "./noiseMap.js";
 import { initNoisePanel } from "./noisePanel.js";
 
