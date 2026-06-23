@@ -106,6 +106,16 @@ async function main() {
       console.error("Erreur historique bruit", e);
     }
   }
+async function refreshMonitoring() {
+  try {
+    const mon = await fetchJson("/api/monitoring");
+    panel.renderMonitoring(mon);
+  } catch (e) {
+    console.warn("Monitoring error", e);
+  }
+}
+
+setInterval(refreshMonitoring, 20_000);
 
   // --- LANCEMENT INITIAL ----------------------------------------------------
   await refreshNoise();
