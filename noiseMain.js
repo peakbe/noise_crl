@@ -116,6 +116,32 @@ async function refreshMonitoring() {
 }
 
 setInterval(refreshMonitoring, 20_000);
+  async function fetchMonitoring() {
+  return fetchJson("/api/monitoring");
+}
+
+async function fetchMetar() {
+  return fetchJson("/api/airport/crl/metar"); // ou ton endpoint actuel
+}
+
+async function refreshDashboard() {
+  try {
+    const [mon, metar] = await Promise.all([
+      fetchMonitoring(),
+      fetchMetar()
+    ]);
+    panel.renderDashboard(mon, metar.raw || metar.metar || "");
+  } catch (e) {
+    console.warn("Dashboard IFR error", e);
+  }
+}
+
+// au démarrage
+await refreshDashboard();
+
+// timers
+setInterval(refreshDashboard, 30_000);
+
 
   // --- LANCEMENT INITIAL ----------------------------------------------------
   await refreshNoise();
