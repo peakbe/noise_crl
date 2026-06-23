@@ -12,3 +12,17 @@ export async function getMetarCRL() {
     return json.data?.[0] ?? null;
   });
 }
+export async function getMetarStatus() {
+  try {
+    const metar = await getMetar(); // ta fonction existante
+    const age = Date.now() - new Date(metar.timestamp).getTime();
+
+    return {
+      ok: age < 10 * 60_000,
+      ageMinutes: age / 60000,
+      last: metar.raw
+    };
+  } catch {
+    return { ok: false };
+  }
+}
