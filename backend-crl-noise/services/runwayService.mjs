@@ -35,3 +35,16 @@ export async function getActiveRunway() {
     };
   });
 }
+
+export async function getRunwayStatus() {
+  try {
+    const rwy = await getActiveRunway();
+    return {
+      ok: !!rwy.runway,
+      runway: rwy.runway,
+      heading: rwy.heading
+    };
+  } catch {
+    return { ok: false };
+  }
+}
