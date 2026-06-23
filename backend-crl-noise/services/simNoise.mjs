@@ -2,8 +2,8 @@
 import { CRL_SONOMETERS } from "../crlSonometers.js";
 
 function baseLevelForRunway(runway) {
-  if (runway === "06") return 52;   // un peu moins bruyant
-  if (runway === "24") return 56;   // un peu plus bruyant
+  if (runway === "06") return 52;   // départs vers l'Est → moins de bruit côté ville
+  if (runway === "24") return 56;   // départs vers l'Ouest → plus de bruit côté habitations
   return 50;
 }
 
@@ -13,11 +13,11 @@ export function simulateNoiseCurrent(activeRunway = "24") {
 
   return CRL_SONOMETERS.map(s => {
     const rand = Math.random();
-    const delta = (rand - 0.5) * 12; // ±6 dB autour du base
+    const delta = (rand - 0.5) * 12; // ±6 dB
     const LAeq = base + delta;
-    const Lmax = LAeq + 8 + (Math.random() * 4); // +8 à +12 dB
+    const Lmax = LAeq + 8 + (Math.random() * 4);
 
-    const offline = Math.random() < 0.05; // 5% de chance offline
+    const offline = Math.random() < 0.05;
 
     return {
       id: s.id,
