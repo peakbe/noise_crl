@@ -132,3 +132,48 @@ panel.renderMonitoring = function (mon) {
     </div>
   `;
 };
+export function initNoisePanel(rootId) {
+  const root = document.getElementById(rootId);
+
+  function setText(id, text, cls) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = text;
+    el.classList.remove("dash-ok","dash-warn","dash-err");
+    if (cls) el.classList.add(cls);
+  }
+
+  return {
+    renderSummary() {}, // déjà existant chez toi
+    renderList() {},    // idem
+
+    renderDashboard(monitoring, metarRaw) {
+      const m = monitoring?.services;
+
+      // METAR
+      if (m?.metar) {
+        setText("dash-metar-main", m.metar.ok ? "OK" : "ERR", m.metar.ok ? "dash-ok" : "dash-err");
+        setText("dash-metar-sub", metarRaw || m.metar.last || "--");
+      }
+
+      // RWY
+      if (m?.runway) {
+        setText("dash-rwy-main", m.runway.runway || "--", m.runway.ok ? "dash-ok" : "dash-err");
+        setText("dash-rwy-sub", m.runway.heading ? `${m.runway.heading}°` : "--");
+      }
+
+      // BRUIT
+      if (m?.noise) {
+        const cls = m.noise.offline === 0 ? "dash-ok" : "dash-warn";
+        setText("dash-noise-main", `${m.noise.sensors ?? 0}`, cls);
+        setText("dash-noise-sub", `${m.noise.offline ?? 0} offline`);
+      }
+
+      // ADS-B
+      if (m?.adsb) {
+        setText("dash-adsb-main", `${m.adsb.aircraft ?? 0}`, m.adsb.ok ? "dash-ok" : "dash-err");
+        setText("dash-adsb-sub", m.adsb.ok ? "trafic reçu" : "erreur");
+      }
+    }
+  };
+}
