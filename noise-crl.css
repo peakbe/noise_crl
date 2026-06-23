@@ -211,3 +211,46 @@ body {
 
 .ok { color: #00ff88; }
 .err { color: #ff4040; }
+
+.panel-dashboard {
+  padding: 8px 10px;
+  border-bottom: 1px solid #123;
+  background: #020b18;
+}
+
+.dash-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.dash-card {
+  flex: 1;
+  border-radius: 6px;
+  border: 1px solid #0af;
+  background: #020f20;
+  padding: 6px 8px;
+}
+
+.dash-title {
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #7fd0ff;
+  margin-bottom: 2px;
+}
+
+.dash-main {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.dash-sub {
+  font-size: 0.75rem;
+  color: #9ab;
+}
+
+.dash-ok { color:#00ff88; }
+.dash-warn { color:#ffb000; }
+.dash-err { color:#ff4040; }
+
