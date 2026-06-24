@@ -188,38 +188,62 @@ export function initNoiseMap(divId) {
     }).addTo(map);
   }
   
-  // ---------------------------------------------------------------------------
-  // TRAFIC ADS-B (Airplanes.live)
-  // ---------------------------------------------------------------------------
-  let trafficLayer = new Map();
+ // ---------------------------------------------------------------------------
+// TRAFIC ADS-B (Airplanes.live) + Filtrage 80 km autour EBCI
+// ---------------------------------------------------------------------------
+let trafficLayer = new Map();
 
-  function updateTraffic(traffic) {
-    if (!traffic || !traffic.states) return;
+// Coordonnées EBCI (Charleroi)
+const EBCI = { lat: 50.459, lon: 4.453 };
 
-    // supprimer anciens marqueurs
-    trafficLayer.forEach(m => map.removeLayer(m));
-    trafficLayer.clear();
+// Haversine PRO+++
+function distKm(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1 * Math.PI / 180) *
+    Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
 
-    traffic.states.forEach(ac => {
-      if (!ac.latitude || !ac.longitude) return;
+function updateTraffic(traffic) {
+  if (!traffic || !traffic.states) return;
 
-      const marker = L.circleMarker([ac.latitude, ac.longitude], {
-        radius: 5,
-        color: "#00aaff",
-        fillColor: "#00aaff",
-        fillOpacity: 0.9
-      }).addTo(map);
+  // supprimer anciens marqueurs
+  trafficLayer.forEach(m => map.removeLayer(m));
+  trafficLayer.clear();
 
-      marker.bindPopup(`
-        <b>${ac.callsign || ac.icao24}</b><br>
-        Alt: ${ac.geo_altitude ?? "--"} ft<br>
-        Vitesse: ${ac.velocity ?? "--"} kt<br>
-        Cap: ${ac.true_track ?? "--"}°
-      `);
+  traffic.states.forEach(ac => {
+    if (!ac.latitude || !ac.longitude) return;
 
-      trafficLayer.set(ac.icao24, marker);
-    });
-  }
+    // --- FILTRAGE 80 KM AUTOUR EBCI ----------------------------------------
+    const d = distKm(EBCI.lat, EBCI.lon, ac.latitude, ac.longitude);
+    if (d > 80) return;
+
+    // --- MARQUEUR IFR -------------------------------------------------------
+    const marker = L.circleMarker([ac.latitude, ac.longitude], {
+      radius: 5,
+      color: "#00aaff",
+      fillColor: "#00aaff",
+      fillOpacity: 0.9
+    }).addTo(map);
+
+    marker.bindPopup(`
+      <b>${ac.callsign || ac.icao24}</b><br>
+      Distance: ${d.toFixed(1)} km<br>
+      Alt: ${ac.geo_altitude ?? "--"} ft<br>
+      Vitesse: ${ac.velocity ?? "--"} kt<br>
+      Cap: ${ac.true_track ?? "--"}°
+    `);
+
+    trafficLayer.set(ac.icao24, marker);
+  });
+}
+
+
 
 
   // ---------------------------------------------------------------------------
