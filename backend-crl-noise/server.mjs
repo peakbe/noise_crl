@@ -7,6 +7,13 @@ import { fileURLToPath } from "url";
 
 import { router as apiRouter } from "./routes.mjs";
 
+import { fetchAirplanesLive } from "./services/airplanesLive.mjs";
+
+app.get("/api/adsb/live", async (req, res) => {
+  const data = await fetchAirplanesLive();
+  res.json(data);
+});
+
 dotenv.config();
 
 const app = express();
