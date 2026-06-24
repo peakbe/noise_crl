@@ -22,6 +22,12 @@ export function initNoiseMap(divId) {
     attribution: "&copy; OpenStreetMap"
   }).addTo(map);
 
+  // Flag pour éviter le crash heatmap
+  map._readyForHeat = false;
+  map.whenReady(() => {
+    map._readyForHeat = true;
+  });
+
   // Conteneurs
   const markers = new Map();
   let heatLayer = null;
@@ -29,30 +35,28 @@ export function initNoiseMap(divId) {
   let runwayLabel = null;
 
   // ---------------------------------------------------------------------------
-  // ICONES IFR
+  // ICONES IFR ULTRA VISIBLES
   // ---------------------------------------------------------------------------
- function createIcon(color) {
-  const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 34 34">
-      <!-- Halo lumineux -->
-      <circle cx="17" cy="17" r="15" fill="${color}22" />
+  function createIcon(color) {
+    const svg = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 34 34">
+        <!-- Halo lumineux -->
+        <circle cx="17" cy="17" r="15" fill="${color}22" />
 
-      <!-- Cercle principal -->
-      <circle cx="17" cy="17" r="11" fill="${color}" stroke="#ffffff" stroke-width="2"/>
+        <!-- Cercle principal -->
+        <circle cx="17" cy="17" r="11" fill="${color}" stroke="#ffffff" stroke-width="2"/>
 
-      <!-- Contour externe -->
-      <circle cx="17" cy="17" r="15" fill="none" stroke="${color}" stroke-width="3" />
-    </svg>
-  `;
-
-  return L.divIcon({
-    className: "noise-marker",
-    html: svg,
-    iconSize: [34, 34],
-    iconAnchor: [17, 17]
-  });
-}
-
+        <!-- Contour externe -->
+        <circle cx="17" cy="17" r="15" fill="none" stroke="${color}" stroke-width="3" />
+      </svg>
+    `;
+    return L.divIcon({
+      className: "noise-marker",
+      html: svg,
+      iconSize: [34, 34],
+      iconAnchor: [17, 17]
+    });
+  }
 
   // ---------------------------------------------------------------------------
   // AJOUT DES SONOMÈTRES
@@ -72,9 +76,11 @@ export function initNoiseMap(divId) {
   initMarkers();
 
   // ---------------------------------------------------------------------------
-  // HEATMAP
+  // HEATMAP (corrigée pour éviter crash width=0)
   // ---------------------------------------------------------------------------
   function updateHeatmap(noiseData) {
+    if (!map._readyForHeat) return;
+
     const points = noiseData.map(n => {
       const s = CRL_SONOMETERS.find(x => x.id === n.id);
       if (!s) return null;
@@ -82,6 +88,8 @@ export function initNoiseMap(divId) {
       const intensity = n.LAeq ? Math.min(1, Math.max(0, (n.LAeq - 45) / 35)) : 0;
       return [s.lat, s.lon, intensity];
     }).filter(Boolean);
+
+    if (!points.length) return;
 
     if (!heatLayer) {
       heatLayer = L.heatLayer(points, {
