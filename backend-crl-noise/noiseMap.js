@@ -243,8 +243,68 @@ function updateTraffic(traffic) {
   });
 }
 
+// ---------------------------------------------------------------------------
+// DETECTION APPROCHE RWY 06 / 24 (EBCI)
+// ---------------------------------------------------------------------------
 
+// Seuils de piste EBCI
+const RWY06 = { lat: 50.45878, lon: 4.45347, heading: 58 };
+const RWY24 = { lat: 50.46088, lon: 4.45539, heading: 238 };
 
+// Conversion degrés → radians
+function toRad(d) { return d * Math.PI / 180; }
+
+// Bearing entre deux points
+function bearingTo(lat1, lon1, lat2, lon2) {
+  const dLon = toRad(lon2 - lon1);
+  const y = Math.sin(dLon) * Math.cos(toRad(lat2));
+  const x =
+    Math.cos(toRad(lat1)) * Math.sin(toRad(lat2)) -
+    Math.sin(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.cos(dLon);
+  return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+}
+
+// Distance NM
+function distNm(lat1, lon1, lat2, lon2) {
+  return distKm(lat1, lon1, lat2, lon2) / 1.852;
+}
+
+// Différence d’angle absolue
+function angleDiff(a, b) {
+  let d = Math.abs(a - b) % 360;
+  return d > 180 ? 360 - d : d;
+}
+
+// Détection approche
+function detectApproach(ac) {
+  if (!ac.latitude || !ac.longitude || !ac.true_track) return null;
+
+  // RWY 06
+  const brg06 = bearingTo(ac.latitude, ac.longitude, RWY06.lat, RWY06.lon);
+  const diff06 = angleDiff(brg06, RWY06.heading);
+  const d06 = distNm(ac.latitude, ac.longitude, RWY06.lat, RWY06.lon);
+
+  const is06 =
+    diff06 < 20 &&        // alignement
+    d06 > 2 && d06 < 20 && // distance utile
+    ac.vertical_rate < 0;  // descente
+
+  if (is06) return { runway: "06", distance: d06, diff: diff06 };
+
+  // RWY 24
+  const brg24 = bearingTo(ac.latitude, ac.longitude, RWY24.lat, RWY24.lon);
+  const diff24 = angleDiff(brg24, RWY24.heading);
+  const d24 = distNm(ac.latitude, ac.longitude, RWY24.lat, RWY24.lon);
+
+  const is24 =
+    diff24 < 20 &&
+    d24 > 2 && d24 < 20 &&
+    ac.vertical_rate < 0;
+
+  if (is24) return { runway: "24", distance: d24, diff: diff24 };
+
+  return null;
+}
 
   // ---------------------------------------------------------------------------
   // API PUBLIQUE DU MODULE
