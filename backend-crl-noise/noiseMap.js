@@ -78,29 +78,36 @@ export function initNoiseMap(divId) {
   // ---------------------------------------------------------------------------
   // HEATMAP (corrigée pour éviter crash width=0)
   // ---------------------------------------------------------------------------
-  function updateHeatmap(noiseData) {
-    if (!map._readyForHeat) return;
+ function updateHeatmap(noiseData) {
+  // Carte pas prête
+  if (!map._readyForHeat) return;
 
-    const points = noiseData.map(n => {
-      const s = CRL_SONOMETERS.find(x => x.id === n.id);
-      if (!s) return null;
+  // Taille du canvas pas encore calculée
+  const size = map.getSize();
+  if (size.x === 0 || size.y === 0) return;
 
-      const intensity = n.LAeq ? Math.min(1, Math.max(0, (n.LAeq - 45) / 35)) : 0;
-      return [s.lat, s.lon, intensity];
-    }).filter(Boolean);
+  // Points bruit
+  const points = noiseData.map(n => {
+    const s = CRL_SONOMETERS.find(x => x.id === n.id);
+    if (!s) return null;
 
-    if (!points.length) return;
+    const intensity = n.LAeq ? Math.min(1, Math.max(0, (n.LAeq - 45) / 35)) : 0;
+    return [s.lat, s.lon, intensity];
+  }).filter(Boolean);
 
-    if (!heatLayer) {
-      heatLayer = L.heatLayer(points, {
-        radius: 45,
-        blur: 25,
-        maxZoom: 17
-      }).addTo(map);
-    } else {
-      heatLayer.setLatLngs(points);
-    }
+  if (!points.length) return;
+
+  // Création / mise à jour heatmap
+  if (!heatLayer) {
+    heatLayer = L.heatLayer(points, {
+      radius: 45,
+      blur: 25,
+      maxZoom: 17
+    }).addTo(map);
+  } else {
+    heatLayer.setLatLngs(points);
   }
+}
 
   // ---------------------------------------------------------------------------
   // COLORATION DES SONOMÈTRES SELON PISTE ACTIVE
