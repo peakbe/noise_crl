@@ -31,19 +31,28 @@ export function initNoiseMap(divId) {
   // ---------------------------------------------------------------------------
   // ICONES IFR
   // ---------------------------------------------------------------------------
-  function createIcon(color) {
-    const svg = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 26 26">
-        <circle cx="13" cy="13" r="11" fill="#001020" stroke="${color}" stroke-width="2"/>
-        <circle cx="13" cy="13" r="5" fill="${color}" />
-      </svg>`;
-    return L.divIcon({
-      className: "noise-marker",
-      html: svg,
-      iconSize: [26, 26],
-      iconAnchor: [13, 13]
-    });
-  }
+ function createIcon(color) {
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 34 34">
+      <!-- Halo lumineux -->
+      <circle cx="17" cy="17" r="15" fill="${color}22" />
+
+      <!-- Cercle principal -->
+      <circle cx="17" cy="17" r="11" fill="${color}" stroke="#ffffff" stroke-width="2"/>
+
+      <!-- Contour externe -->
+      <circle cx="17" cy="17" r="15" fill="none" stroke="${color}" stroke-width="3" />
+    </svg>
+  `;
+
+  return L.divIcon({
+    className: "noise-marker",
+    html: svg,
+    iconSize: [34, 34],
+    iconAnchor: [17, 17]
+  });
+}
+
 
   // ---------------------------------------------------------------------------
   // AJOUT DES SONOMÈTRES
