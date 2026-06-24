@@ -9,9 +9,10 @@ body {
 }
 
 /* Layout principal */
-#map {
-  flex: 2;
+html, body, #map {
+  height: 100%;
 }
+
 
 #noise-panel {
   flex: 1;
