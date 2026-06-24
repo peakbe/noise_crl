@@ -8,7 +8,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 import { router as apiRouter } from "./routes.mjs";
-import { fetchAirplanesLive } from "./services/airplanesLive.mjs";
+import { getAdsb } from "./services/adsbService.mjs";
 
 dotenv.config();
 
@@ -36,10 +36,10 @@ app.use(morgan("dev"));
 // -----------------------------------------------------------------------------
 app.use("/api", apiRouter);
 
-// Route ADS-B directe
+// ADS-B backend
 app.get("/api/adsb/live", async (req, res) => {
   try {
-    const data = await fetchAirplanesLive();
+    const data = await getAdsb();
     res.json(data);
   } catch (e) {
     console.error("ADS-B error:", e);
@@ -48,7 +48,7 @@ app.get("/api/adsb/live", async (req, res) => {
 });
 
 // -----------------------------------------------------------------------------
-// FRONTEND STATIC (depuis /public à la racine du repo)
+// FRONTEND STATIC (depuis /public)
 // -----------------------------------------------------------------------------
 const publicPath = path.join(__dirname, "../public");
 app.use(express.static(publicPath));
