@@ -15,20 +15,37 @@ export function initNoiseMap(divId) {
     zoomControl: true,
     minZoom: 10,
     maxZoom: 18
-  }).setView([50.46, 4.45], 12);
+  }).setView([50.459, 4.453], 12);
 
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19,
     attribution: "&copy; OpenStreetMap"
   }).addTo(map);
 
-  // Flag pour éviter le crash heatmap
+  // ---------------------------------------------------------------------------
+  // PATCH DÉFINITIF ANTI-HEATMAP CRASH
+  // ---------------------------------------------------------------------------
   map._readyForHeat = false;
+  map._heatmapAllowed = false;
+
   map.whenReady(() => {
     map._readyForHeat = true;
   });
 
-  // Conteneurs
+  // Attendre que le DIV #map ait une taille non nulle
+  function waitForVisibleMap() {
+    const size = map.getSize();
+    if (size.x > 0 && size.y > 0) {
+      map._heatmapAllowed = true;
+    } else {
+      setTimeout(waitForVisibleMap, 100);
+    }
+  }
+  waitForVisibleMap();
+  
+  // ---------------------------------------------------------------------------
+  // CONTENEURS
+  // ---------------------------------------------------------------------------
   const markers = new Map();
   let heatLayer = null;
   let runwayLayer = null;
