@@ -40,7 +40,8 @@ app.use("/api", apiRouter);
 // -----------------------------------------------------------------------------
 // FRONTEND STATIQUE (HTML / CSS / JS)
 // -----------------------------------------------------------------------------
-app.use(express.static(__dirname));  
+app.use(express.static("public"));
+  
 // Sert :
 // - noise-crl.html
 // - noise-crl.css
