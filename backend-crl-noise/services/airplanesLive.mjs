@@ -43,3 +43,4 @@ function normalizeAirplanesLive(data) {
     source: "airplanes.live"
   };
 }
+
