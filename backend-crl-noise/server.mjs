@@ -1,3 +1,5 @@
+// server.mjs — Backend PRO+++ CRL Noise (Render compatible)
+
 import express from "express";
 import cors from "cors";
 import morgan from "morgan";
@@ -6,24 +8,21 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 import { router as apiRouter } from "./routes.mjs";
-
 import { fetchAirplanesLive } from "./services/airplanesLive.mjs";
-
-app.get("/api/adsb/live", async (req, res) => {
-  const data = await fetchAirplanesLive();
-  res.json(data);
-});
 
 dotenv.config();
 
-const app = express();
-const PORT = process.env.PORT || 4000;
-
 // -----------------------------------------------------------------------------
-// RESOLUTION DES CHEMINS (important pour Render)
+// RESOLUTION DES CHEMINS
 // -----------------------------------------------------------------------------
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// -----------------------------------------------------------------------------
+// APP
+// -----------------------------------------------------------------------------
+const app = express();
+const PORT = process.env.PORT || 4000;
 
 // -----------------------------------------------------------------------------
 // MIDDLEWARES
@@ -37,25 +36,28 @@ app.use(morgan("dev"));
 // -----------------------------------------------------------------------------
 app.use("/api", apiRouter);
 
-// -----------------------------------------------------------------------------
-// FRONTEND STATIQUE (HTML / CSS / JS)
-// -----------------------------------------------------------------------------
-app.use(express.static("public"));
-  
-// Sert :
-// - noise-crl.html
-// - noise-crl.css
-// - noiseMain.js
-// - noiseMap.js
-// - noisePanel.js
-// - sonoColors.js
-// - crlSonometers.js
+// Route ADS-B directe
+app.get("/api/adsb/live", async (req, res) => {
+  try {
+    const data = await fetchAirplanesLive();
+    res.json(data);
+  } catch (e) {
+    console.error("ADS-B error:", e);
+    res.status(500).json({ error: "ADS-B fetch failed" });
+  }
+});
 
 // -----------------------------------------------------------------------------
-// ROUTE PAR DÉFAUT → renvoie ton dashboard bruit
+// FRONTEND STATIC (depuis /public à la racine du repo)
+// -----------------------------------------------------------------------------
+const publicPath = path.join(__dirname, "../public");
+app.use(express.static(publicPath));
+
+// -----------------------------------------------------------------------------
+// ROUTE PAR DÉFAUT → noise-crl.html
 // -----------------------------------------------------------------------------
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "noise-crl.html"));
+  res.sendFile(path.join(publicPath, "noise-crl.html"));
 });
 
 // -----------------------------------------------------------------------------
