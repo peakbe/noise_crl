@@ -218,28 +218,82 @@ function updateTraffic(traffic) {
 
   traffic.states.forEach(ac => {
     if (!ac.latitude || !ac.longitude) return;
+    const app = detectApproach(ac);
+    
+function createAircraftIcon(heading) {
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36"
+         style="transform: rotate(${heading}deg);">
+      <polygon points="18,2 22,14 18,12 14,14" fill="#00aaff"/>
+      <rect x="17" y="12" width="2" height="14" fill="#00aaff"/>
+      <polygon points="18,26 24,32 18,30 12,32" fill="#00aaff"/>
+    </svg>
+  `;
+  return L.divIcon({
+    className: "aircraft-icon",
+    html: svg,
+    iconSize: [36, 36],
+    iconAnchor: [18, 18]
+  });
+}
+
+    function drawVelocityVector(lat, lon, heading, speedKt) {
+  if (!speedKt || speedKt < 30) return null; // ignore avions lents
+
+  const distanceNm = Math.min(speedKt / 60 * 2, 3); // 2 minutes max, capé à 3 NM
+  const distanceKm = distanceNm * 1.852;
+
+  const R = 6371;
+  const brg = heading * Math.PI / 180;
+
+  const lat2 = lat + (distanceKm / R) * (180 / Math.PI) * Math.cos(brg);
+  const lon2 = lon + (distanceKm / R) * (180 / Math.PI) * Math.sin(brg) / Math.cos(lat * Math.PI / 180);
+
+  return L.polyline([[lat, lon], [lat2, lon2]], {
+    color: "#00aaff",
+    weight: 2,
+    opacity: 0.8
+  });
+}
 
     // --- FILTRAGE 80 KM AUTOUR EBCI ----------------------------------------
     const d = distKm(EBCI.lat, EBCI.lon, ac.latitude, ac.longitude);
     if (d > 80) return;
 
     // --- MARQUEUR IFR -------------------------------------------------------
-    const marker = L.circleMarker([ac.latitude, ac.longitude], {
-      radius: 5,
-      color: "#00aaff",
-      fillColor: "#00aaff",
-      fillOpacity: 0.9
-    }).addTo(map);
+    const color = app
+  ? (app.runway === "06" ? "#00ff00" : "#ff0000")
+  : "#00aaff";
 
-    marker.bindPopup(`
-      <b>${ac.callsign || ac.icao24}</b><br>
-      Distance: ${d.toFixed(1)} km<br>
-      Alt: ${ac.geo_altitude ?? "--"} ft<br>
-      Vitesse: ${ac.velocity ?? "--"} kt<br>
-      Cap: ${ac.true_track ?? "--"}°
-    `);
+const icon = createAircraftIcon(ac.true_track || 0);
+
+const marker = L.marker([ac.latitude, ac.longitude], {
+  icon
+}).addTo(map);
+
+// vecteur vitesse
+const vector = drawVelocityVector(
+  ac.latitude,
+  ac.longitude,
+  ac.true_track,
+  ac.velocity
+);
+
+if (vector) vector.addTo(map);
+
+// popup IFR
+marker.bindPopup(`
+  <b>${ac.callsign || ac.icao24}</b><br>
+  Cap : ${ac.true_track ?? "--"}°<br>
+  Vitesse : ${ac.velocity ?? "--"} kt<br>
+  Altitude : ${ac.geo_altitude ?? "--"} ft<br>
+`);
+
+
 
     trafficLayer.set(ac.icao24, marker);
+if (vector) trafficLayer.set(ac.icao24 + "_vec", vector);
+
   });
 }
 
