@@ -1,4 +1,4 @@
-// noiseMain.js — bootstrap PRO+++ CRL bruit + METAR + piste active
+// noiseMain.js — bootstrap PRO+++ CRL bruit + METAR + piste active + ADS-B
 
 import { CRL_SONOMETERS } from "./crlSonometers.js";
 import { initNoiseMap } from "./noiseMap.js";
@@ -56,7 +56,6 @@ async function main() {
       const noiseData = await fetchCurrentNoise();
       lastNoise = noiseData;
 
-      // coloration RWY + heatmap + label
       mapCtrl.updateNoiseDisplay(noiseData, activeRunway);
 
       panel.renderSummary(noiseData);
@@ -73,7 +72,6 @@ async function main() {
       if (rw && rw !== activeRunway) {
         activeRunway = rw;
 
-        // mise à jour immédiate de la coloration RWY
         mapCtrl.updateNoiseDisplay(lastNoise, activeRunway);
 
         mapCtrl.drawRunwayCorridor(
@@ -153,15 +151,19 @@ async function main() {
 
   // --- LANCEMENT INITIAL ----------------------------------------------------
   await refreshDashboard();
-  await refreshNoise();
-  await refreshWeather();
 
-  // ADS-B isolé pour éviter crash
-  try {
-    await refreshAdsb();
-  } catch (e) {
-    console.warn("ADS-B init failed", e);
-  }
+  // IMPORTANT : éviter appel prématuré de la heatmap
+  setTimeout(() => {
+    refreshNoise();
+  }, 500);
+
+  setTimeout(() => {
+    refreshWeather();
+  }, 600);
+
+  setTimeout(() => {
+    refreshAdsb();
+  }, 800);
 
   // --- TIMERS ---------------------------------------------------------------
   setInterval(refreshNoise, 30_000);
