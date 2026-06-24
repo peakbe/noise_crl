@@ -1,4 +1,4 @@
-// airplanesLive.mjs — Source ADS-B PRO+++ compatible Render
+// airplanesLive.mjs — Source ADS-B Airplanes.live PRO+++
 
 const API_URL = "https://api.airplanes.live/v2/positions";
 
@@ -15,7 +15,6 @@ export async function fetchAirplanesLive() {
   }
 }
 
-// Normalisation vers format OpenSky-like
 function normalizeAirplanesLive(data) {
   if (!data || !data.ac) return { states: [], timestamp: Date.now() };
 
