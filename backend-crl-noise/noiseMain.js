@@ -42,8 +42,10 @@ async function main() {
   // --- RUNWAY INIT ----------------------------------------------------------
   try {
     activeRunway = await fetchActiveRunway();
-    // centre approximatif CRL
-    mapCtrl.drawRunwayCorridor({ lat: 50.459, lon: 4.453 }, activeRunway === "06" ? 70 : 250);
+    mapCtrl.drawRunwayCorridor(
+      { lat: 50.459, lon: 4.453 },
+      activeRunway === "06" ? 70 : 250
+    );
   } catch (e) {
     console.warn("Piste active indisponible", e);
   }
@@ -53,7 +55,10 @@ async function main() {
     try {
       const noiseData = await fetchCurrentNoise();
       lastNoise = noiseData;
+
+      // coloration RWY + heatmap + label
       mapCtrl.updateNoiseDisplay(noiseData, activeRunway);
+
       panel.renderSummary(noiseData);
       panel.renderList(CRL_SONOMETERS, noiseData, onSelectSonometer);
     } catch (e) {
@@ -67,15 +72,21 @@ async function main() {
       const rw = await fetchActiveRunway();
       if (rw && rw !== activeRunway) {
         activeRunway = rw;
+
+        // mise à jour immédiate de la coloration RWY
         mapCtrl.updateNoiseDisplay(lastNoise, activeRunway);
-        mapCtrl.drawRunwayCorridor({ lat: 50.459, lon: 4.453 }, activeRunway === "06" ? 70 : 250);
+
+        mapCtrl.drawRunwayCorridor(
+          { lat: 50.459, lon: 4.453 },
+          activeRunway === "06" ? 70 : 250
+        );
       }
     } catch (e) {
       console.warn("Erreur refresh piste", e);
     }
   }
 
-  // --- REFRESH METEO / ADSB (optionnel, pour futur) -------------------------
+  // --- REFRESH METEO --------------------------------------------------------
   async function refreshWeather() {
     try {
       const meteo = await fetchWeather();
@@ -85,12 +96,13 @@ async function main() {
     }
   }
 
+  // --- REFRESH ADS-B (isolé pour éviter crash) ------------------------------
   async function refreshAdsb() {
     try {
       const traffic = await fetchAdsbLive();
       mapCtrl.updateTraffic?.(traffic);
     } catch (e) {
-      console.warn("Erreur ADS-B", e);
+      console.warn("Erreur ADS-B (isolée, dashboard continue)", e);
     }
   }
 
@@ -98,7 +110,7 @@ async function main() {
   async function onSelectSonometer(id) {
     try {
       const now = new Date();
-      const from = new Date(now.getTime() - 60 * 60 * 1000); // 1h
+      const from = new Date(now.getTime() - 60 * 60 * 1000);
       const hist = await fetchNoiseHistory(id, from.toISOString(), now.toISOString());
       const s = CRL_SONOMETERS.find(x => x.id === id);
       panel.renderDetails(s, hist.history);
@@ -106,47 +118,50 @@ async function main() {
       console.error("Erreur historique bruit", e);
     }
   }
-async function refreshMonitoring() {
-  try {
-    const mon = await fetchJson("/api/monitoring");
-    panel.renderMonitoring(mon);
-  } catch (e) {
-    console.warn("Monitoring error", e);
-  }
-}
 
-setInterval(refreshMonitoring, 20_000);
+  // --- MONITORING -----------------------------------------------------------
+  async function refreshMonitoring() {
+    try {
+      const mon = await fetchJson("/api/monitoring");
+      panel.renderMonitoring(mon);
+    } catch (e) {
+      console.warn("Monitoring error", e);
+    }
+  }
+
+  setInterval(refreshMonitoring, 20_000);
+
   async function fetchMonitoring() {
-  return fetchJson("/api/monitoring");
-}
-
-async function fetchMetar() {
-  return fetchJson("/api/airport/crl/metar"); // ou ton endpoint actuel
-}
-
-async function refreshDashboard() {
-  try {
-    const [mon, metar] = await Promise.all([
-      fetchMonitoring(),
-      fetchMetar()
-    ]);
-    panel.renderDashboard(mon, metar.raw || metar.metar || "");
-  } catch (e) {
-    console.warn("Dashboard IFR error", e);
+    return fetchJson("/api/monitoring");
   }
-}
 
-// au démarrage
-await refreshDashboard();
+  async function fetchMetar() {
+    return fetchJson("/api/airport/crl/metar");
+  }
 
-// timers
-setInterval(refreshDashboard, 30_000);
-
+  async function refreshDashboard() {
+    try {
+      const [mon, metar] = await Promise.all([
+        fetchMonitoring(),
+        fetchMetar()
+      ]);
+      panel.renderDashboard(mon, metar.raw || metar.metar || "");
+    } catch (e) {
+      console.warn("Dashboard IFR error", e);
+    }
+  }
 
   // --- LANCEMENT INITIAL ----------------------------------------------------
+  await refreshDashboard();
   await refreshNoise();
   await refreshWeather();
-  await refreshAdsb();
+
+  // ADS-B isolé pour éviter crash
+  try {
+    await refreshAdsb();
+  } catch (e) {
+    console.warn("ADS-B init failed", e);
+  }
 
   // --- TIMERS ---------------------------------------------------------------
   setInterval(refreshNoise, 30_000);
