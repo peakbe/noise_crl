@@ -33,6 +33,7 @@ export function initNoiseMap(divId) {
   let heatLayer = null;
   let runwayLayer = null;
   let runwayLabel = null;
+  let trafficLayer = new Map();
 
   // ---------------------------------------------------------------------------
   // ICONES IFR ULTRA VISIBLES
