@@ -187,6 +187,40 @@ export function initNoiseMap(divId) {
       fillOpacity: 0.08
     }).addTo(map);
   }
+  
+  // ---------------------------------------------------------------------------
+  // TRAFIC ADS-B (Airplanes.live)
+  // ---------------------------------------------------------------------------
+  let trafficLayer = new Map();
+
+  function updateTraffic(traffic) {
+    if (!traffic || !traffic.states) return;
+
+    // supprimer anciens marqueurs
+    trafficLayer.forEach(m => map.removeLayer(m));
+    trafficLayer.clear();
+
+    traffic.states.forEach(ac => {
+      if (!ac.latitude || !ac.longitude) return;
+
+      const marker = L.circleMarker([ac.latitude, ac.longitude], {
+        radius: 5,
+        color: "#00aaff",
+        fillColor: "#00aaff",
+        fillOpacity: 0.9
+      }).addTo(map);
+
+      marker.bindPopup(`
+        <b>${ac.callsign || ac.icao24}</b><br>
+        Alt: ${ac.geo_altitude ?? "--"} ft<br>
+        Vitesse: ${ac.velocity ?? "--"} kt<br>
+        Cap: ${ac.true_track ?? "--"}°
+      `);
+
+      trafficLayer.set(ac.icao24, marker);
+    });
+  }
+
 
   // ---------------------------------------------------------------------------
   // API PUBLIQUE DU MODULE
@@ -201,3 +235,10 @@ export function initNoiseMap(divId) {
     drawRunwayCorridor
   };
 }
+
+return {
+  map,
+  updateNoiseDisplay,
+  drawRunwayCorridor,
+  updateTraffic
+};
