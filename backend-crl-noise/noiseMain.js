@@ -21,7 +21,7 @@ async function fetchNoiseHistory(id, from, to) {
 
 async function fetchActiveRunway() {
   const j = await fetchJson("/api/airport/crl/active-runway");
-  return j.runway; // "06" ou "24"
+  return j.runway;
 }
 
 async function fetchWeather() {
@@ -85,7 +85,7 @@ async function main() {
   }
 
   // --- REFRESH METEO --------------------------------------------------------
-  async function refreshWeather() {
+   async function refreshWeather() {
     try {
       const meteo = await fetchWeather();
       panel.renderWeather?.(meteo);
@@ -94,13 +94,14 @@ async function main() {
     }
   }
 
+
   // --- REFRESH ADS-B (isolé pour éviter crash) ------------------------------
   async function refreshAdsb() {
     try {
       const traffic = await fetchAdsbLive();
       mapCtrl.updateTraffic?.(traffic);
     } catch (e) {
-      console.warn("Erreur ADS-B (isolée, dashboard continue)", e);
+      console.warn("Erreur ADS-B (isolée)", e);
     }
   }
 
@@ -118,7 +119,7 @@ async function main() {
   }
 
   // --- MONITORING -----------------------------------------------------------
-  async function refreshMonitoring() {
+ async function refreshMonitoring() {
     try {
       const mon = await fetchJson("/api/monitoring");
       panel.renderMonitoring(mon);
@@ -148,22 +149,13 @@ async function main() {
       console.warn("Dashboard IFR error", e);
     }
   }
-
   // --- LANCEMENT INITIAL ----------------------------------------------------
   await refreshDashboard();
 
   // IMPORTANT : éviter appel prématuré de la heatmap
-  setTimeout(() => {
-    refreshNoise();
-  }, 500);
-
-  setTimeout(() => {
-    refreshWeather();
-  }, 600);
-
-  setTimeout(() => {
-    refreshAdsb();
-  }, 800);
+  setTimeout(refreshNoise, 500);
+  setTimeout(refreshWeather, 600);
+  setTimeout(refreshAdsb, 800);
 
   // --- TIMERS ---------------------------------------------------------------
   setInterval(refreshNoise, 30_000);
