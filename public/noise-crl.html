@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>CRL – Suivi du bruit</title>
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #020710;
+      color: #e0f4ff;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    #map {
+      flex: 2;
+    }
+
+    #noise-panel {
+      flex: 1;
+      max-width: 420px;
+      border-left: 1px solid #123;
+      background: radial-gradient(circle at top, #041424 0, #020710 55%);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border-bottom: 1px solid #123;
+      background: #020b18;
+      letter-spacing: 0.08em;
+    }
+
+    .panel-header .title {
+      font-weight: 600;
+      color: #7fd0ff;
+    }
+
+    .panel-header .subtitle {
+      font-size: 0.8rem;
+      color: #ff5252;
+    }
+
+    .panel-body {
+      padding: 10px;
+      overflow-y: auto;
+    }
+
+    .summary-card {
+      border: 1px solid #0af;
+      border-radius: 6px;
+      padding: 8px 10px;
+      margin-bottom: 10px;
+      background: #020f20;
+    }
+
+    .summary-main {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    .summary-main .label {
+      font-size: 0.8rem;
+      color: #9ab;
+    }
+
+    .summary-main .value {
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+
+    .summary-secondary {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: #9ab;
+    }
+
+    #np-list {
+      margin-top: 8px;
+      border-top: 1px solid #123;
+    }
+
+    .np-row {
+      display: grid;
+      grid-template-columns: 60px 1fr 80px 70px;
+      gap: 4px;
+      padding: 4px 2px;
+      font-size: 0.82rem;
+      align-items: center;
+      border-bottom: 1px solid #07121f;
+      cursor: pointer;
+    }
+
+    .np-row:hover {
+      background: #071525;
+    }
+
+    .np-id {
+      font-weight: 600;
+      color: #7fd0ff;
+    }
+
+    .np-commune {
+      color: #c0d0ff;
+    }
+
+    .np-laeq {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .np-class {
+      text-align: right;
+      text-transform: uppercase;
+      font-size: 0.7rem;
+      padding: 2px 4px;
+      border-radius: 3px;
+      border: 1px solid #234;
+    }
+
+    .np-class-low { color:#00ff88; border-color:#00ff88; }
+    .np-class-medium { color:#c8ff00; border-color:#c8ff00; }
+    .np-class-high { color:#ffb000; border-color:#ffb000; }
+    .np-class-veryHigh { color:#ff4000; border-color:#ff4000; }
+    .np-class-extreme { color:#ff00ff; border-color:#ff00ff; }
+
+    .details-card {
+      margin-top: 10px;
+      border-radius: 6px;
+      background: #020f20;
+      padding: 8px 10px;
+      border: 1px solid #123;
+    }
+
+    .details-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .details-header .id {
+      font-weight: 600;
+      color: #7fd0ff;
+    }
+
+    .details-header .commune {
+      font-size: 0.85rem;
+      color: #c0d0ff;
+    }
+
+    .details-main {
+      border-left: 3px solid #0af;
+      padding-left: 8px;
+      margin-bottom: 6px;
+    }
+
+    .details-main .label {
+      font-size: 0.75rem;
+      color: #9ab;
+      display: block;
+    }
+
+    .details-main .value {
+      font-size: 0.9rem;
+      margin-bottom: 4px;
+      display: block;
+    }
+
+    .details-chart-placeholder {
+      font-size: 0.75rem;
+      color: #789;
+      border-top: 1px dashed #123;
+      padding-top: 4px;
+      margin-top: 4px;
+    }
+
+    .noise-marker {
+      filter: drop-shadow(0 0 4px #000);
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="map"></div>
+
+  <div id="noise-panel">
+    <div id="np-dashboard" class="panel-dashboard">
+      <div class="dash-row">
+        <div class="dash-card">
+          <div class="dash-title">METAR</div>
+          <div class="dash-main" id="dash-metar-main">--</div>
+          <div class="dash-sub" id="dash-metar-sub">--</div>
+        </div>
+        <div class="dash-card">
+          <div class="dash-title">RWY</div>
+          <div class="dash-main" id="dash-rwy-main">--</div>
+          <div class="dash-sub" id="dash-rwy-sub">--</div>
+        </div>
+      </div>
+
+      <div class="dash-row">
+        <div class="dash-card">
+          <div class="dash-title">BRUIT</div>
+          <div class="dash-main" id="dash-noise-main">--</div>
+          <div class="dash-sub" id="dash-noise-sub">--</div>
+        </div>
+        <div class="dash-card">
+          <div class="dash-title">ADS-B</div>
+          <div class="dash-main" id="dash-adsb-main">--</div>
+          <div class="dash-sub" id="dash-adsb-sub">--</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="np-list"></div>
+  </div>
+
+  <script type="module" src="./noiseMain.js"></script>
+</body>
+</html>
