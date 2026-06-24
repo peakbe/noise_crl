@@ -162,6 +162,12 @@ async function main() {
   setInterval(refreshRunway, 60_000);
   setInterval(refreshWeather, 5 * 60_000);
   setInterval(refreshAdsb, 15_000);
+
+  setInterval(() => {
+  const el = document.getElementById("map");
+  console.log("MAP SIZE:", el.clientWidth, el.clientHeight);
+}, 500);
+
 }
 
 main().catch(console.error);
